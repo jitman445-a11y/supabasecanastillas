@@ -1,0 +1,350 @@
+/* =====================================================
+   ===== ESTILOS PRINCIPALES — BANCO DE ALIMENTOS =====
+   ===================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    min-height: 100vh;
+    color: #2d3748;
+}
+
+h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    color: #1a365d;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+}
+
+h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.85rem;
+    color: #2b6cb0;
+}
+
+h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+/* ===== BOTÓN MENÚ LATERAL ===== */
+.btn-menu {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1002;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 0.75rem;
+    font-size: 1.25rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* ===== BARRA LATERAL ===== */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    background: linear-gradient(180deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%);
+    color: white;
+    z-index: 1001;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding-top: 1.5rem;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+}
+
+.sidebar.mostrar { transform: translateX(0); }
+
+.logo {
+    padding: 1rem 1.5rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 0.5rem;
+}
+
+.btn-pestaña {
+    display: block;
+    width: calc(100% - 1.5rem);
+    margin: 0.25rem 0.75rem;
+    text-align: left;
+    padding: 0.9rem 1.25rem;
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.btn-pestaña:hover { background: rgba(255,255,255,0.1); color: white; }
+.btn-pestaña.activa { background: rgba(255,255,255,0.2); color: white; font-weight: 600; }
+
+.espacio { height: 2rem; }
+
+.btn-salir {
+    display: block;
+    width: calc(100% - 1.5rem);
+    margin: 0.25rem 0.75rem;
+    text-align: left;
+    padding: 0.9rem 1.25rem;
+    background: transparent;
+    border: none;
+    color: #fca5a5;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-salir:hover { background: rgba(239,68,68,0.2); color: white; }
+
+/* ===== ÁREA DE CONTENIDO ===== */
+.contenido {
+    margin-left: 0;
+    padding: 4.5rem 1rem 1.5rem;
+    transition: margin-left 0.3s ease;
+}
+
+.pestaña { display: none; }
+.pestaña.activa { display: block; }
+
+.tarjeta {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ===== FORMULARIOS ===== */
+input, select, textarea {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.65rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    background: #fafbfc;
+    transition: border 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: white;
+}
+
+input[readonly] {
+    background: #f0fdf4;
+    color: #166534;
+    font-weight: 600;
+}
+
+/* ===== BOTONES GENERALES ===== */
+button {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 0.65rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-guardar {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.btn-guardar:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+
+.btn-exito {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+/* ===== COMPONENTES ESPECÍFICOS ===== */
+.caja-recogidas {
+    background: #eff6ff;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin: 1rem 0;
+}
+
+.fila-recogida {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.fila-recogida select, .fila-recogida input {
+    flex: 1;
+    min-width: 110px;
+    margin-bottom: 0;
+}
+
+.btn-agregar-fila {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.btn-quitar {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    width: auto;
+}
+
+/* ===== SUBPESTAÑAS ===== */
+.barra-subpestañas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.btn-subpestaña,
+.btn-subcombustible,
+.btn-subinforme {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.85rem;
+    background: #e2e8f0;
+    border-radius: 0.6rem;
+    color: #374151;
+}
+
+.btn-subpestaña.activa,
+.btn-subcombustible.activa,
+.btn-subinforme.activa {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.subpestaña-admin { display: none; }
+.subpestaña-admin.activa { display: block; }
+
+/* ===== LISTAS Y TABLAS ===== */
+.fila-lista {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.fila-lista span { font-weight: 500; }
+
+.btn-editar {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    width: auto;
+    margin: 0;
+}
+
+.btn-eliminar {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    width: auto;
+    margin: 0;
+}
+
+.btn-inactivar {
+    background: #e5e7eb;
+    color: #4b5563;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    width: auto;
+    margin: 0;
+}
+
+.inactivo { opacity: 0.5; text-decoration: line-through; }
+
+/* ===== MODAL DE LOGIN ===== */
+.modal-login {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.caja-login {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 1.25rem;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.caja-login h2 { text-align: center; border: none; }
+.caja-login a { 
+    display: block; 
+    text-align: center; 
+    margin-top: 1rem; 
+    color: #2563eb; 
+    font-size: 0.9rem; 
+    text-decoration: none; 
+}
+
+/* ===== GRID RESPONSIVO ===== */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.col-span-2 {
+    grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+    .col-span-2 {
+        grid-column: span 1;
+    }
+}
+
+/* ===== VERSIÓN ESCRITORIO ===== */
+@media (min-width: 768px) {
+    .contenido { margin-left: 260px; }
+    .sidebar { transform: translateX(0); }
+    .btn-menu { display: none; }
+}

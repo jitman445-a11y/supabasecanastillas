@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Donaciones — Corabastos</title>
+
+  <!-- ✅ LIBRERÍA SUPABASE — CARGA DIRECTA Y CONFIABLE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #f0f4f8; min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: white;
+      padding: 1rem 1.5rem;
+    }
+    .header-contenido {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .contenedor { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+    .contenedor-principal { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .menu {
+      width: 240px; background: white; border-radius: 0.75rem;
+      padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      flex-shrink: 0; transform: translateX(0); transition: transform 0.3s ease;
+    }
+    .menu.visible-movil { transform: translateX(0); }
+    .menu-cerrar { display: none; text-align: right; margin-bottom: 0.5rem; }
+    .menu-item {
+      display: block; width: 100%; text-align: left;
+      padding: 0.75rem 1rem; border: none; background: none;
+      cursor: pointer; border-radius: 0.5rem; margin-bottom: 0.25rem; font-size: 0.95rem;
+    }
+    .menu-item:hover, .menu-item.activo { background: #eef2ff; color: #1e40af; font-weight: 600; }
+
+    .area-contenido { flex: 1; min-width: 300px; }
+    .tarjeta {
+      background: white; border-radius: 0.75rem; padding: 1.25rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 1rem;
+    }
+
+    .btn { padding: 0.6rem 1rem; border: none; border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+    .btn-primario { background: #2563eb; color: white; width: 100%; }
+    .btn-primario:hover { background: #1d4ed8; }
+    .btn-peligro { background: #ef4444; color: white; }
+
+    .grupo { margin-bottom: 0.75rem; }
+    label { display: block; font-weight: 500; margin-bottom: 0.3rem; }
+    input, select {
+      width: 100%; padding: 0.6rem; border: 1px solid #d1d5db;
+      border-radius: 0.375rem; font-size: 0.95rem;
+    }
+    input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    .oculto { display: none !important; }
+    .text-center { text-align: center; }
+    .mt-4 { margin-top: 1rem; }
+
+    @media (max-width: 768px) {
+      .contenedor-principal { flex-direction: column; }
+      .menu {
+        width: 100%; position: fixed; top: 0; left: 0; height: 100vh;
+        z-index: 100; border-radius: 0; transform: translateX(-100%);
+      }
+      .menu.visible-movil { transform: translateX(0); }
+      .menu-cerrar { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PANTALLA DE INICIO DE SESIÓN -->
+<div id="pantallaLogin" style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1rem;">
+  <div class="tarjeta" style="width:100%; max-width:420px;">
+    <h2 class="text-center" style="margin-bottom:1.5rem; font-size:1.3rem;">🏦 Corabastos — Control de Donaciones</h2>
+    <div class="grupo">
+      <label>👤 Usuario</label>
+      <input type="text" id="login_usuario" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="grupo">
+      <label>🔑 Contraseña</label>
+      <input type="password" id="login_clave" placeholder="123456" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primario mt-4" onclick="manejarLogin()">🔓 Iniciar Sesión</button>
+    <p class="text-center mt-4" style="font-size:0.85rem; color:#6b7280;">Credencial: <strong>admin / 123456</strong></p>
+  </div>
+</div>
+
+<!-- APLICACIÓN PRINCIPAL -->
+<div id="appPrincipal" class="oculto">
+  <header>
+    <div class="header-contenido">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <button onclick="alternarMenu()" style="background:none; border:none; color:white; font-size:1.25rem; cursor:pointer;">☰</button>
+        <h1 style="font-size:1.1rem;">📦 Control de Donaciones — Corabastos</h1>
+      </div>
+      <div style="display:flex; align-items:center; gap:1rem; font-size:0.9rem;">
+        <span id="nombreUsuarioActivo"></span>
+        <button class="btn btn-peligro" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="cerrarSesion()">🚪 Salir</button>
+      </div>
+    </div>
+  </header>
+  <div class="contenedor">
+    <div class="contenedor-principal">
+      <nav id="menuLateral" class="menu">
+        <div class="menu-cerrar">
+          <button onclick="alternarMenu()" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">✕</button>
+        </div>
+        <button class="menu-item" onclick="cargarModulo('anuncios')">📢 Anuncios</button>
+        <button class="menu-item" onclick="cargarModulo('donantes')">🤝 Donantes</button>
+        <button class="menu-item" onclick="cargarModulo('recoleccion')">📥 Recolección</button>
+        <button class="menu-item" onclick="cargarModulo('misCanastillas')">📋 Mis Canastillas</button>
+        <button class="menu-item" onclick="cargarModulo('movimientos')">🚚 Movimientos</button>
+        <button class="menu-item" onclick="cargarModulo('transportadora')">🚛 Transportadora</button>
+        <button class="menu-item" onclick="cargarModulo('combustible')">⛽ Combustible</button>
+        <button class="menu-item" onclick="cargarModulo('informes')">📊 Informes</button>
+        <button class="menu-item" onclick="cargarModulo('usuarios')">👥 Usuarios</button>
+      </nav>
+      <main class="area-contenido">
+        <div id="contenido" class="tarjeta">
+          <h3>Bienvenido al sistema</h3>
+          <p style="margin-top:0.5rem; color:#6b7280;">Seleccione un módulo del menú para comenzar.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     🔌 CONEXIÓN A TU PROYECTO
+     ===================================================== -->
+<script>
+  const SUPABASE_URL = 'https://dhyuqpnrugebowrjxeo.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoeXVxcGducnVnZWJvd3JqeGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NDI1MDksImV4cCI6MjEwNjAxODUwOX0.025FneEmdDkErLvOBkxz7sT6xcHwg9IKct2XEPy9BDc';
+
+  let supabaseClient = null;
+  let usuarioActivo = null;
+  window.colaboradores = [];
+  window.conductores = [];
+  window.vehiculos = [];
+  window.donantes = [];
+  window.usuarios = [];
+
+  // Inicializar cliente
+  if (typeof supabase !== 'undefined') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase CONECTADO');
+  } else {
+    console.error('❌ La librería NO se cargó');
+    alert('❌ No se pudo cargar la librería. Revisa tu conexión o prueba en Chrome.');
+  }
+
+  // =====================================================
+  // 🔐 FUNCIONES DE SESIÓN
+  // =====================================================
+  async function iniciarSesion(usuario, clave) {
+    if (!supabaseClient) {
+      alert('❌ Supabase no está disponible');
+      return false;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('usuarios')
+      .select('*')
+      .eq('usuario', usuario)
+      .eq('clave', clave)
+      .eq('activa', true)
+      .single();
+
+    if (error || !data) {
+      console.error('Error login:', error);
+      alert('❌ Usuario o contraseña incorrectos');
+      return false;
+    }
+
+    usuarioActivo = data;
+    localStorage.setItem('usuarioActivo', JSON.stringify(data));
+    console.log('✅ Sesión iniciada:', data.nombre);
+    return true;
+  }
+
+  function cerrarSesion() {
+    usuarioActivo = null;
+    localStorage.removeItem('usuarioActivo');
+    location.reload();
+  }
+
+  function recuperarSesion() {
+    const guardada = localStorage.getItem('usuarioActivo');
+    if (guardada) {
+      usuarioActivo = JSON.parse(guardada);
+      return true;
+    }
+    return false;
+  }
+
+  async function cargarDatosGlobales() {
+    if (!supabaseClient) return;
+
+    try {
+      const [col, cond, veh, don, usu] = await Promise.all([
+        supabaseClient.from('colaboradores').select('*'),
+        supabaseClient.from('conductores_transportadora').select('*'),
+        supabaseClient.from('vehiculos').select('*'),
+        supabaseClient.from('donantes').select('*'),
+        supabaseClient.from('usuarios').select('*')
+      ]);
+
+      window.colaboradores = col.data || [];
+      window.conductores = cond.data || [];
+      window.vehiculos = veh.data || [];
+      window.donantes = don.data || [];
+      window.usuarios = usu.data || [];
+
+      console.log('✅ Datos cargados — Usuarios:', window.usuarios.length);
+    } catch (e) {
+      console.error('❌ Error cargando datos:', e);
+    }
+  }
+
+  function tienePermiso(modulo) {
+    if (!usuarioActivo) return false;
+    if (usuarioActivo.rol === 'admin') return true;
+    return !!usuarioActivo.permisos?.[modulo];
+  }
+
+  function alternarMenu() {
+    document.getElementById('menuLateral')?.classList.toggle('visible-movil');
+  }
+
+  async function manejarLogin() {
+    const usuario = document.getElementById('login_usuario').value.trim();
+    const clave = document.getElementById('login_clave').value;
+    if (!usuario || !clave) {
+      alert('⚠️ Escribe usuario y contraseña');
+      return;
+    }
+    const exito = await iniciarSesion(usuario, clave);
+    if (exito) {
+      document.getElementById('pantallaLogin').classList.add('oculto');
+      document.getElementById('appPrincipal').classList.remove('oculto');
+      document.getElementById('nombreUsuarioActivo').textContent = usuarioActivo.nombre;
+      await cargarDatosGlobales();
+    }
+  }
+
+  // Recuperar sesión al cargar
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (recuperarSesion() && supabaseClient) {
+      document.getElementById('pantallaLogin').classList.add('oculto');
+      document.getElementById('appPrincipal').classList.remove('oculto');
+      document.getElementById('nombreUsuarioActivo').textContent = usuarioActivo.nombre;
+      await cargarDatosGlobales();
+    }
+  });
+
+  // Carga de módulos (se irán agregando después)
+  async function cargarModulo(nombre) {
+    const contenedor = document.getElementById('contenido');
+    if (!contenedor) return;
+    
+    if (!tienePermiso(nombre)) {
+      contenedor.innerHTML = `<div class="tarjeta text-center" style="color:#ef4444;">🔒 Sin permiso</div>`;
+      return;
+    }
+    
+    contenedor.innerHTML = `<div class="tarjeta"><h3>✅ Módulo: ${nombre}</h3><p>Próximamente disponible</p></div>`;
+  }
+</script>
+
+</body>
+</html>

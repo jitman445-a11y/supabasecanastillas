@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control de Donaciones — Corabastos</title>
 
-  <!-- ✅ LIBRERÍA SUPABASE — CARGA DIRECTA Y CONFIABLE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <!-- ✅ LIBRERÍA SUPABASE — DIRECCIÓN CORRECTA -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
@@ -94,6 +94,7 @@
     </div>
     <button class="btn btn-primario mt-4" onclick="manejarLogin()">🔓 Iniciar Sesión</button>
     <p class="text-center mt-4" style="font-size:0.85rem; color:#6b7280;">Credencial: <strong>admin / 123456</strong></p>
+    <p class="text-center mt-2" style="font-size:0.75rem; color:#9ca3af;">Abre consola F12 → ve los detalles</p>
   </div>
 </div>
 
@@ -153,34 +154,60 @@
   window.usuarios = [];
 
   // Inicializar cliente
-  if (typeof supabase !== 'undefined') {
+  if (typeof supabase !== 'undefined' && supabase.createClient) {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('✅ Supabase CONECTADO');
   } else {
     console.error('❌ La librería NO se cargó');
-    alert('❌ No se pudo cargar la librería. Revisa tu conexión o prueba en Chrome.');
+    alert('❌ No se pudo conectar. Prueba en Chrome o con otra red.');
   }
 
   // =====================================================
-  // 🔐 FUNCIONES DE SESIÓN
+  // 🔐 INICIO DE SESIÓN CON DEPURACIÓN
   // =====================================================
   async function iniciarSesion(usuario, clave) {
-    if (!supabaseClient) {
-      alert('❌ Supabase no está disponible');
+    if (!supabaseClient) return false;
+
+    console.log('🔍 Buscando usuario:', usuario);
+
+    // Traer TODOS los usuarios para verificar
+    const { data: todosUsuarios, error: errLista } = await supabaseClient
+      .from('usuarios')
+      .select('*');
+
+    console.log('📋 Lista completa de usuarios:', todosUsuarios);
+
+    if (errLista) {
+      console.error('❌ No se puede leer la tabla:', errLista);
+      alert('⚠️ No tienes permiso para leer usuarios. Ejecuta el código de políticas en Supabase SQL Editor.');
       return false;
     }
 
+    // Buscar el usuario exacto
     const { data, error } = await supabaseClient
       .from('usuarios')
       .select('*')
       .eq('usuario', usuario)
-      .eq('clave', clave)
-      .eq('activa', true)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      console.error('Error login:', error);
-      alert('❌ Usuario o contraseña incorrectos');
+    console.log('📄 Usuario encontrado:', data);
+    console.log('⚠️ Error de búsqueda:', error);
+
+    if (!data) {
+      alert('❌ No existe el usuario "' + usuario + '". Crea el usuario en Supabase → SQL Editor.');
+      return false;
+    }
+
+    // Comparar contraseña
+    console.log('🔑 Clave en BD:', data.clave, '| Ingresada:', clave);
+    if (data.clave !== clave) {
+      alert('❌ Contraseña incorrecta.\nEn BD: "' + data.clave + '"\nIngresada: "' + clave + '"');
+      return false;
+    }
+
+    // Verificar activo
+    if (!data.activa) {
+      alert('❌ Usuario inactivo');
       return false;
     }
 
@@ -207,7 +234,6 @@
 
   async function cargarDatosGlobales() {
     if (!supabaseClient) return;
-
     try {
       const [col, cond, veh, don, usu] = await Promise.all([
         supabaseClient.from('colaboradores').select('*'),
@@ -255,6 +281,16 @@
     }
   }
 
+  async function cargarModulo(nombre) {
+    const contenedor = document.getElementById('contenido');
+    if (!contenedor) return;
+    if (!tienePermiso(nombre)) {
+      contenedor.innerHTML = `<div class="tarjeta text-center" style="color:#ef4444;">🔒 Sin permiso</div>`;
+      return;
+    }
+    contenedor.innerHTML = `<div class="tarjeta"><h3>✅ Módulo: ${nombre}</h3><p>En desarrollo...</p></div>`;
+  }
+
   // Recuperar sesión al cargar
   window.addEventListener('DOMContentLoaded', async () => {
     if (recuperarSesion() && supabaseClient) {
@@ -264,19 +300,6 @@
       await cargarDatosGlobales();
     }
   });
-
-  // Carga de módulos (se irán agregando después)
-  async function cargarModulo(nombre) {
-    const contenedor = document.getElementById('contenido');
-    if (!contenedor) return;
-    
-    if (!tienePermiso(nombre)) {
-      contenedor.innerHTML = `<div class="tarjeta text-center" style="color:#ef4444;">🔒 Sin permiso</div>`;
-      return;
-    }
-    
-    contenedor.innerHTML = `<div class="tarjeta"><h3>✅ Módulo: ${nombre}</h3><p>Próximamente disponible</p></div>`;
-  }
 </script>
 
 </body>
